@@ -1,0 +1,5 @@
+Export --> runable JAR
+contenido del manifest:
+
+Manifest-Version: 1.0
+Main-Class: got12sim.Simulador
