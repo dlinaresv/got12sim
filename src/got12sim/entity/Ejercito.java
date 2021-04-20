@@ -40,24 +40,24 @@ public class Ejercito {
 	public void cleanDammageInflicted() {
 		dammageInflicted = 0;
 	}
-	public int setDammageInflicted(int inflicted,int inflictedMagic,Terrain aTerrain, boolean cityDefensor) {
+	public int setDammageInflicted(int inflicted,int inflictedMagic,War war, boolean cityDefensor) {
 		
 		int dammageRestante = 0;
 		int totalInflicted = inflicted + inflictedMagic;
-		System.out.println("     FALTA correccion de daño por Estrategia, sumamos el daño mas el daño magico ("+inflicted+"+"+inflictedMagic+")="+totalInflicted);
+		war.logSimulador.addLog("     FALTA correccion de daño por Estrategia, sumamos el daño mas el daño magico ("+inflicted+"+"+inflictedMagic+")="+totalInflicted);
 		
 		if (this.getMagicDefense() > 0) {
 			if (totalInflicted < this.getMagicDefense()) {
 				this.setMagicDefense(this.getMagicDefense()-totalInflicted);
-				System.out.println("     Powerful protection magic saved the lives, deflecting "+totalInflicted+" <-- Army: "+this.name);
+				war.logSimulador.addLog("     Powerful protection magic saved the lives, deflecting "+totalInflicted+" <-- Army: "+this.name);
 				return 0;
 			} 
 			totalInflicted = totalInflicted - this.getMagicDefense();
-			System.out.println("     Powerful protection magic saved the lives, deflecting "+this.getMagicDefense()+" --> inflicted ="+totalInflicted+" <-- Army: "+this.name);
+			war.logSimulador.addLog("     Powerful protection magic saved the lives, deflecting "+this.getMagicDefense()+" --> inflicted ="+totalInflicted+" <-- Army: "+this.name);
 			this.setMagicDefense(0);
 		}
 		
-		int totalDefensa = UtilWar.obtenerDefensaEjercito(this, aTerrain,cityDefensor).intValue();
+		int totalDefensa = UtilWar.obtenerDefensaEjercito(this, war.terrain,cityDefensor).intValue();
 		// añadimos al daño que se ya tiene en esta ronda, al que de añadimos (por si sobra de otro ejercito).
 		dammageInflicted = dammageInflicted + totalInflicted;
 		
@@ -66,10 +66,10 @@ public class Ejercito {
 			dammageRestante = dammageInflicted.intValue()-totalDefensa;
 			dammageInflicted = totalDefensa;
 		} 
-		System.out.println("     Ejercito de "+name+" (Def:"+totalDefensa+") recibe "+totalInflicted+"("+dammageInflicted+") --> dammageRestante:"+dammageRestante);
+		war.logSimulador.addLog("     Ejercito de "+name+" (Def:"+totalDefensa+") recibe "+totalInflicted+"("+dammageInflicted+") --> dammageRestante:"+dammageRestante);
 		
 		if (dammageRestante>0) {
-			System.out.println("     Ejercito de "+name+" --> ELIMINADO");
+			war.logSimulador.addLog("     Ejercito de "+name+" --> ELIMINADO");
 			this.setEstaVivo(false);
 		}
 		return dammageRestante;

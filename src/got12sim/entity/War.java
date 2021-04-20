@@ -12,7 +12,17 @@ public class War {
 	private static String WAR = "war";
 	private static String OVERRUN = "overrun";
 	private String combatType;
+	private boolean victoriaAliada = false;
+	public LogSimulador logSimulador = new LogSimulador();
 	
+	public boolean isVictoriaAliada() {
+		return victoriaAliada;
+	}
+
+	public void setVictoriaAliada(boolean victoriaAliada) {
+		this.victoriaAliada = victoriaAliada;
+	}
+
 	public String getCombatType() {
 		return combatType;
 	}
@@ -60,6 +70,8 @@ public class War {
 		ejectitosEnemigos.add(ejercito);
 		System.out.println("     Add Ejercito Enemigo: "+name+" <-- "+ejercito.getName());
 	}
+	
+
 	
 	public String getName() {
 		return name;

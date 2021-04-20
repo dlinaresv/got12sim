@@ -5,30 +5,45 @@ import java.util.ArrayList;
 import got12sim.entity.Ejercito;
 import got12sim.entity.Terrain;
 import got12sim.entity.Tropa;
+import got12sim.entity.War;
 
 public class UtilWar {
 
+
 	
-	public static void presentacion(String name, ArrayList<Ejercito> ejectitos, Terrain aTerrain, boolean cityEjercitos) {
+	public static void presentacion(boolean aliado, War war) {
 		
 		int totalAtaque = 0;
 		int totalDefensa = 0;
+		String name = "N-A";
+		ArrayList<Ejercito> ejectitos;
+		boolean cityEjercitos = false;
+		
+		if (aliado) {
+			war.logSimulador.addLogInfo("EJERCITO ALIADO:");
+			name = "ALIADO";
+			ejectitos = war.ejectitosAliados;
+			cityEjercitos = war.terrain.isAliedCity();
+		} else {
+			war.logSimulador.addLogInfo("EJERCITO ENEMIGO:");
+			name = "ENEMIGO";
+			ejectitos = war.ejectitosEnemigos;
+			cityEjercitos = war.terrain.isEnemyCity();
+		}
+		
 		
 		for (Ejercito ejercito : ejectitos) {
-			System.out.println(" --------------------------------------------------- ");
-			System.out.println("Ejercito de "+ejercito.getName());					
-			Float ataque = obtenerAtaqueEjercito(ejercito,aTerrain, cityEjercitos);
-			Float defensa = obtenerDefensaEjercito(ejercito,aTerrain,cityEjercitos);
-			listarEjercito(ejercito,aTerrain,cityEjercitos);
-			//System.out.println(" Ejercito "+ejercito.name+" --> ataque:"+ataque.intValue()+" defensa:"+defensa.intValue());
+			war.logSimulador.addSeparador();
+			war.logSimulador.addLog("Ejercito de "+ejercito.getName());					
+			Float ataque = obtenerAtaqueEjercito(ejercito,war.terrain, cityEjercitos);
+			Float defensa = obtenerDefensaEjercito(ejercito,war.terrain,cityEjercitos);
+			listarEjercito(ejercito,war,cityEjercitos);
 			totalAtaque = totalAtaque + ataque.intValue();
 			totalDefensa = totalDefensa + defensa.intValue();
-			System.out.println(" --------------------------------------------------- ");
+			war.logSimulador.addSeparador();
 		}
-		System.out.println("TOTAL "+name+"--> Att: "+totalAtaque+" Def: "+totalDefensa);
+		war.logSimulador.addLogInfo("TOTAL "+name+"--> Att: "+totalAtaque+" Def: "+totalDefensa);
 	}
-	
-
 	
 	/**
 	 * (Unit strength for the terrain) * (( training/none+weapons/armors + 100)/300/2) * (# of troops) 
@@ -50,18 +65,6 @@ public class UtilWar {
 		
     	float attCoeff = (ataque*coefEjercito);
     	float resultado = ataque + attCoeff;
-    	
-//    	if (aTropa.getQuantity() != 0) {
-//	    	System.out.println("           CALCULO ATAQUE TROPA: ["+aTropa.toString()+"] fuerzaTerrain="+fuerzaTerrain);
-//	    	System.out.println("           CALCULO ATAQUE TROPA: ["+aTropa.toString()+"] fuerzaTropaAtacando = [ (Training="+aTropa.getTraining()+")+(Weapon="+aTropa.getWeapon()+")+100 ="+calculoAux+" ]/300 ="+fuerzaTropaAtacando);
-//	    	System.out.println("           CALCULO ATAQUE TROPA: ["+aTropa.toString()+"] ataque = fuerzaTerrain*(fuerzaTropaAtacando/2)*Quantity = "+fuerzaTerrain+"*("+fuerzaTropaAtacando+" / 2)*"+aTropa.getQuantity()+"="+ataque);
-//	    	System.out.println("           CALCULO ATAQUE TROPA: ["+aTropa.toString()+"] coefEjercito = (commandRang="+commandRang+")+(morale="+morale+")/200="+coefEjercito);
-//	    	System.out.println("           CALCULO ATAQUE TROPA: ["+aTropa.toString()+"] attCoeff = [(ataque="+ataque+")*(coefEjercito="+coefEjercito+")] = "+attCoeff);
-//	    	System.out.println("           CALCULO ATAQUE TROPA: ["+aTropa.toString()+"] ----------------------------------------");
-//	    	System.out.println("           CALCULO ATAQUE TROPA: ["+aTropa.toString()+"] resultado = "+resultado);
-//    	} else {
-//    		System.out.println("           CALCULO ATAQUE TROPA: ["+aTropa.toString()+"] = resultado = "+resultado);
-//    	}
     	
 		return resultado;
 	}
@@ -116,31 +119,30 @@ public class UtilWar {
 	    return totalDefensa;
 	}
 	
-	public static void listarEjercito(Ejercito ejercito, Terrain aTerrain, boolean haveCity) {
-		System.out.println("   Listar Ejercito de "+ejercito.getName()+ 
+	
+	public static void listarEjercito(Ejercito ejercito, War war, boolean haveCity) {
+		war.logSimulador.addLog("   Listar Ejercito de "+ejercito.getName()+ 
 							" Commad: "+ejercito.getCommandRang()+
-							" Terreno: "+aTerrain.getTerrain()+ 
+							" Terreno: "+war.terrain.getTerrain()+ 
 							" City: "+haveCity);
-		System.out.println("     Magia [Att:"+ejercito.getMagicAttack()+", Deff: "+ejercito.getMagicDefense()+"] ");
+		war.logSimulador.addLog("     Magia [Att:"+ejercito.getMagicAttack()+", Deff: "+ejercito.getMagicDefense()+"] ");
 		float totalAtaque = 0;
 		float totalDefensa = 0;
 		
 		for (Tropa tropa : ejercito.tropas) {
 			
-			Float ataque = obtenerAtaqueTropa(tropa, aTerrain, ejercito.getCommandRang(), ejercito.getMorale(),haveCity);
-			Float defensa = obtenerDefensaTropa(tropa , aTerrain,haveCity);
+			Float ataque = obtenerAtaqueTropa(tropa, war.terrain, ejercito.getCommandRang(), ejercito.getMorale(),haveCity);
+			Float defensa = obtenerDefensaTropa(tropa , war.terrain,haveCity);
 			Float coeff_txema =  ataque / defensa;
 			tropa.setCoeff_txema(coeff_txema);
-			System.out.println("     ["+tropa.getQuantity()+"] "+tropa.getTipo()+" con (Att: " +ataque.intValue()+", Def: "+defensa.intValue()+") coeff_Txema(Att/Def)="+coeff_txema+" (primero los de menos fuerza)");
+			war.logSimulador.addLog("     ["+tropa.getQuantity()+"] "+tropa.getTipo()+" con (Att: " +ataque.intValue()+", Def: "+defensa.intValue()+") coeff_Txema(Att/Def)="+coeff_txema+" (primero los de menos fuerza)");
 			totalAtaque = totalAtaque + ataque.intValue();
 			totalDefensa = totalDefensa + defensa.intValue();
 		}
-		System.out.println("     Ejercito de "+ejercito.getName()
+		war.logSimulador.addLogInfo("     Ejercito de "+ejercito.getName()
 			+" ---> [Att: " +totalAtaque+ "("+(totalAtaque+ejercito.getMagicAttack())
 			+"), Def: "+totalDefensa+ "("+(totalDefensa+ejercito.getMagicDefense())+")]");
 	}
-	
-	
 	
 	/**
 	 * metodo para retornar el numero de tropas que mueren.
@@ -150,14 +152,14 @@ public class UtilWar {
 	 * @param totalInflicted
 	 * @return
 	 */
-	static public int obtenerNumTropasMueren(Tropa tropa,Terrain aTerrain, float totalInflicted, float defensaTropa) {
+	static public int obtenerNumTropasMueren(Tropa tropa,War war, float totalInflicted, float defensaTropa) {
 		int resultado = 0;
 		float coste = defensaTropa / tropa.getQuantity();
 		
 		if (totalInflicted > 0) {
 			resultado = ((int)(totalInflicted / coste))+1;
 		}
-		System.out.println("        ["+tropa.getQuantity()+"] "+tropa.getTipo()+" a "+coste+" cada uno = "+(coste*resultado)+" de daño efectivo --> "+resultado+" "+tropa.getTipo()+" muertos.");
+		war.logSimulador.addLog("        ["+tropa.getQuantity()+"] "+tropa.getTipo()+" a "+coste+" cada uno = "+(coste*resultado)+" de daño efectivo --> "+resultado+" "+tropa.getTipo()+" muertos.");
 				
 		return resultado;
 	}
@@ -173,7 +175,7 @@ public class UtilWar {
 		return ataque;
 	}
 
-	static public int obtenerMagiaAtaqueEjercito(int round, ArrayList<Ejercito> ejectitos) {
+	static public int obtenerMagiaAtaqueEjercito(int round, ArrayList<Ejercito> ejectitos, War war) {
 		
 		int magiaTotalAtaque = 0;
 
@@ -185,78 +187,29 @@ public class UtilWar {
 			// contamos la magia
 			if (ejercito.getMagicAttack() > 0) {
 				magiaTotalAtaque = magiaTotalAtaque + ejercito.getMagicAttack();
-				System.out.println("     MagicAttack ("+ejercito.getMagicAttack()+") from "+ejercito.getName());
+				war.logSimulador.addLog("     MagicAttack ("+ejercito.getMagicAttack()+") from "+ejercito.getName());
 				ejercito.setMagicAttack(0);
 			}
 		}
 		return magiaTotalAtaque;
 	}
 	
-	static public int getNumEjercitosVivos(ArrayList<Ejercito> ejercitos, Terrain aTerrain,boolean cityDelEjercito) {
+	static public int getNumEjercitosVivos(ArrayList<Ejercito> ejercitos, War war,boolean cityDelEjercito) {
 		int numEjercitos = 0;
 		for (Ejercito ejercito : ejercitos) {
 			if (ejercito.isEstaVivo()) {
-				float defensaTropa = UtilWar.obtenerDefensaEjercito(ejercito, aTerrain,cityDelEjercito);
+				float defensaTropa = UtilWar.obtenerDefensaEjercito(ejercito, war.terrain,cityDelEjercito);
 				if (defensaTropa>0) {
 					numEjercitos++;
 				} else {
 					ejercito.setEstaVivo(false);
-					System.out.println("     marcamos el ejercito ["+ ejercito.getName() + "] como Eliminado");
+					war.logSimulador.addLog("     marcamos el ejercito ["+ ejercito.getName() + "] como Eliminado");
 				}
 			}
 		}
 		return numEjercitos;
 	}
 	
-	/**
-	 * @deprecated
-	 * 
-	 * @param round
-	 * @param ejercitoAtacante
-	 * @param ejercitosDefensores
-	 * @param aTerrain
-	 * @param totalAtaque
-	 * @param cityEjercitosDefensores
-	 * @return
-	 */
-	static public int actualizarDamageEjercitosOLD(int round,Ejercito ejercitoAtacante,ArrayList<Ejercito> ejercitosDefensores, Terrain aTerrain,int totalAtaque,boolean cityEjercitosDefensores) {
-		int dañoMagico = 0;
-		
-		int numEjercitos = getNumEjercitosVivos(ejercitosDefensores,aTerrain, cityEjercitosDefensores);
-		// parche
-		if (numEjercitos==0) numEjercitos=1;
-		// parche
-		
-		// Daño magico
-		if (ejercitoAtacante.getMagicAttack()>0) {
-			System.out.println("     Magic Attack!! ("+ejercitoAtacante.getMagicAttack()+")");
-			dañoMagico = ejercitoAtacante.getMagicAttack();
-			ejercitoAtacante.setMagicAttack(0);
-		}
-		
-		float totalInflicted = totalAtaque / numEjercitos;
-		float totalInflictedMagic = dañoMagico / numEjercitos;
-		if (numEjercitos > 1) {
-			System.out.println("     dividimos el daño ("+totalAtaque+") de "+ejercitoAtacante.getName()+" entre "+numEjercitos+"  = "+totalInflicted);
-		} else {
-			System.out.println("     NO dividimos el daño de "+ejercitoAtacante.getName()+" ("+totalAtaque+") ");
-		}
-		
-		int dañoTotalSobrante = 0;
-		for (Ejercito ejercito : ejercitosDefensores) {
-			if (ejercito.isEstaVivo()) {
-				// caluclo de daño por estrategia
-				
-				// añadimos daño magico
-				
-				// asignamos daño 
-				int inflicted = (int) totalInflicted;
-				int dañoSobrante = ejercito.setDammageInflicted(inflicted,(int) totalInflictedMagic, aTerrain,cityEjercitosDefensores);
-				dañoTotalSobrante = dañoTotalSobrante + dañoSobrante;
-			}
-		}
-		return dañoTotalSobrante;
-	}
 	
 	/**
 	 * 
@@ -270,19 +223,19 @@ public class UtilWar {
 	 * @param cityEjercitosDefensores
 	 * @return daño sobrante.
 	 */
-	static public int actualizarDamageEjercitos(int round,Ejercito ejercitoAtacante,ArrayList<Ejercito> ejercitosDefensores, Terrain aTerrain,int totalAtaque,boolean cityEjercitosDefensores) {
+	static public int actualizarDamageEjercitos(int round,Ejercito ejercitoAtacante,ArrayList<Ejercito> ejercitosDefensores, War war,int totalAtaque,boolean cityEjercitosDefensores) {
 		float numTropasEjercito = 0;
 		float numTropasTotales = 0;
 		float dañoMagico = 0;
 		
-		float numEjercitos = getNumEjercitosVivos(ejercitosDefensores,aTerrain, cityEjercitosDefensores);
+		float numEjercitos = getNumEjercitosVivos(ejercitosDefensores,war, cityEjercitosDefensores);
 		// parche
 		if (numEjercitos==0) numEjercitos=1;
 		// parche
 		
 		// Daño magico
 		if (ejercitoAtacante.getMagicAttack()>0) {
-			System.out.println("     Magic Attack!! ("+ejercitoAtacante.getMagicAttack()+")");
+			war.logSimulador.addLog("     Magic Attack!! ("+ejercitoAtacante.getMagicAttack()+")");
 			dañoMagico = ejercitoAtacante.getMagicAttack();
 			ejercitoAtacante.setMagicAttack(0);
 		}
@@ -298,9 +251,9 @@ public class UtilWar {
 		float totalInflicted = 0;
 		float totalInflictedMagic = dañoMagico / numEjercitos;
 		if (numEjercitos > 1) {
-			System.out.println("     dividimos el daño ("+totalAtaque+") de "+ejercitoAtacante.getName()+" entre "+numEjercitos+"  total de tropas = "+numTropasTotales);
+			war.logSimulador.addLog("     dividimos el daño ("+totalAtaque+") de "+ejercitoAtacante.getName()+" entre "+numEjercitos+"  total de tropas = "+numTropasTotales);
 		} else {
-			System.out.println("     NO dividimos el daño de "+ejercitoAtacante.getName()+" ("+totalAtaque+") ");
+			war.logSimulador.addLog("     NO dividimos el daño de "+ejercitoAtacante.getName()+" ("+totalAtaque+") ");
 		}
 		
 		int dañoTotalSobrante = 0;
@@ -314,39 +267,39 @@ public class UtilWar {
 				float coeffDammage = ejercito.getNumTropas() / numTropasTotales;
 				totalInflicted = totalAtaque * coeffDammage;
 				totalInflictedMagic = dañoMagico * coeffDammage;
-				System.out.println("     Coeff Dammage para "+ejercito.getName()+" es de: "+coeffDammage+" --> totalInflicted = "+totalInflicted+", totalInflictedMagic = "+totalInflictedMagic);
+				war.logSimulador.addLog("     Coeff Dammage para "+ejercito.getName()+" es de: "+coeffDammage+" --> totalInflicted = "+totalInflicted+", totalInflictedMagic = "+totalInflictedMagic);
 				
 				// asignamos daño 
 				int inflicted = (int) totalInflicted;
-				int dañoSobrante = ejercito.setDammageInflicted(inflicted,(int) totalInflictedMagic, aTerrain,cityEjercitosDefensores);
+				int dañoSobrante = ejercito.setDammageInflicted(inflicted,(int) totalInflictedMagic, war,cityEjercitosDefensores);
 				dañoTotalSobrante = dañoTotalSobrante + dañoSobrante;
 			}
 		}
 		return dañoTotalSobrante;
 	}
 	
-	static public void actualizarBajas(int round,ArrayList<Ejercito> ejercitos,Terrain aTerrain, boolean cityDefensor) {
+	static public void actualizarBajas(int round,ArrayList<Ejercito> ejercitos,War war, boolean cityDefensor) {
 				
 		for (Ejercito ejercito : ejercitos) {
 			float inflicted = ejercito.getDammageInflicted();
 			
-			System.out.println("     inflicted ("+inflicted+") of damage to "+ejercito.getName());
+			war.logSimulador.addLog("     inflicted ("+inflicted+") of damage to "+ejercito.getName());
 			if (inflicted>0) {
 				for (Tropa tropa : ejercito.tropas) {
-					float defensaTropa = UtilWar.obtenerDefensaTropa(tropa, aTerrain,cityDefensor);
+					float defensaTropa = UtilWar.obtenerDefensaTropa(tropa, war.terrain,cityDefensor);
 					if (defensaTropa>0) {
 						if (defensaTropa > inflicted) {
 							// restamos bajas y fin.
-							int numTropas_a_restar = UtilWar.obtenerNumTropasMueren(tropa,aTerrain,inflicted, defensaTropa);
+							int numTropas_a_restar = UtilWar.obtenerNumTropasMueren(tropa,war,inflicted, defensaTropa);
 							int numTropas_inicial = tropa.getQuantity();
 							int numTropas_quedan = numTropas_inicial - numTropas_a_restar;
 							tropa.setQuantity(numTropas_quedan);
-							System.out.println("        lost "+numTropas_a_restar+" "+tropa.getTipo()+" del ejercito: "+ejercito.getName()+" --> quedan: "+numTropas_quedan+" "+tropa.getTipo()+" (dammage inflicted:"+inflicted+")");
+							war.logSimulador.addLog("        lost "+numTropas_a_restar+" "+tropa.getTipo()+" del ejercito: "+ejercito.getName()+" --> quedan: "+numTropas_quedan+" "+tropa.getTipo()+" (dammage inflicted:"+inflicted+")");
 							break;
 						} else {
 							inflicted = inflicted - defensaTropa;
-							UtilWar.obtenerNumTropasMueren(tropa,aTerrain,defensaTropa, defensaTropa);
-							System.out.println("        lost all "+tropa.getQuantity()+" "+tropa.getTipo()+" del ejercito: "+ejercito.getName()+" (dammage inflicted:"+defensaTropa+")");
+							UtilWar.obtenerNumTropasMueren(tropa,war,defensaTropa, defensaTropa);
+							war.logSimulador.addLog("        lost all "+tropa.getQuantity()+" "+tropa.getTipo()+" del ejercito: "+ejercito.getName()+" (dammage inflicted:"+defensaTropa+")");
 							tropa.setQuantity(0);
 						}
 					}

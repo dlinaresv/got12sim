@@ -11,106 +11,86 @@ public class SimuladorWar {
 	static public void iniciarGuerra(War war) {
 		int numEjercitosAliados = 1;
 		int numEjercitosEnemigos = 1;
-
-		System.out.println(" --------------------------------------------------- ");
-		System.out.println(" |           Presentacion Aliado                   | ");
-		System.out.println(" --------------------------------------------------- ");
+	    
+		UtilWar.presentacion(true, war);
+		UtilWar.presentacion(false, war);
 		
-		UtilWar.presentacion("Aliado", war.ejectitosAliados, war.terrain, war.terrain.isAliedCity());
-		
-		System.out.println(" --------------------------------------------------- ");
-		System.out.println(" |           Presentacion Enemigo                  | ");
-		System.out.println(" --------------------------------------------------- ");
-		
-		UtilWar.presentacion("Enemigo", war.ejectitosEnemigos, war.terrain, war.terrain.isEnemyCity());
-		
-	    System.out.println("#######################################");
-	    System.out.println("##        Inicio simulacion          ##");
-	    System.out.println("#######################################");
+	    war.logSimulador.addSeparador();
+	    war.logSimulador.addLogInfo("INICIO simulacion");
+	    war.logSimulador.addSeparador();
 		
 		for (int round = 0; round < 10; round++) {
 			
 			// asignamos daño de los ejercitos
 			for (Ejercito ejercitoAliado : war.ejectitosAliados) {
-				ataqueDelEjercito(round,ejercitoAliado,war.ejectitosEnemigos,war.terrain,war.terrain.isAliedCity(), war.terrain.isEnemyCity());
+				ataqueDelEjercito(round,ejercitoAliado,war.ejectitosEnemigos,war,war.terrain.isAliedCity(), war.terrain.isEnemyCity());
 			}
 			for (Ejercito ejercitoEnemigo : war.ejectitosEnemigos) {
-				ataqueDelEjercito(round,ejercitoEnemigo,war.ejectitosAliados,war.terrain,war.terrain.isEnemyCity(), war.terrain.isAliedCity());
+				ataqueDelEjercito(round,ejercitoEnemigo,war.ejectitosAliados,war,war.terrain.isEnemyCity(), war.terrain.isAliedCity());
 			}
 			
 			// calculamos las bajas
-			System.out.println("   - Casualties round "+round+" :");
-			UtilWar.actualizarBajas(round,war.ejectitosAliados,war.terrain,war.terrain.isAliedCity());
-			UtilWar.actualizarBajas(round,war.ejectitosEnemigos,war.terrain,war.terrain.isEnemyCity());
+			war.logSimulador.addLog("   - Casualties round "+round+" :");
+			UtilWar.actualizarBajas(round,war.ejectitosAliados,war,war.terrain.isAliedCity());
+			UtilWar.actualizarBajas(round,war.ejectitosEnemigos,war,war.terrain.isEnemyCity());
 
-			System.out.println(" ------------------------------------ ");
-			numEjercitosAliados = UtilWar.getNumEjercitosVivos(war.ejectitosAliados, war.terrain, war.terrain.isAliedCity());
-			numEjercitosEnemigos = UtilWar.getNumEjercitosVivos(war.ejectitosEnemigos, war.terrain, war.terrain.isEnemyCity());
+			war.logSimulador.addSeparador();
+			numEjercitosAliados = UtilWar.getNumEjercitosVivos(war.ejectitosAliados, war, war.terrain.isAliedCity());
+			numEjercitosEnemigos = UtilWar.getNumEjercitosVivos(war.ejectitosEnemigos, war, war.terrain.isEnemyCity());
 			
 			
 			if ((numEjercitosAliados == 0) || (numEjercitosEnemigos == 0)) {
 				// Fin
-				System.out.println(" -Fin combate, num Ejercitos Aliados vivos: "+numEjercitosAliados);
-				System.out.println(" -Fin combate, num Ejercitos Enemigos vivos: "+numEjercitosEnemigos);
+				if ((numEjercitosEnemigos == 0)) war.setVictoriaAliada(true);
+				
+				war.logSimulador.addLog(" -Fin combate, num Ejercitos Aliados vivos: "+numEjercitosAliados);
+				war.logSimulador.addLog(" -Fin combate, num Ejercitos Enemigos vivos: "+numEjercitosEnemigos);
 				break;
 			}
 
 		}
 		
-		System.out.println(" --------------------------------------------------- ");
+	    war.logSimulador.addSeparador();
+	    war.logSimulador.addLogInfo("FIN simulacion");
+	    war.logSimulador.addSeparador();
 		
+		UtilWar.presentacion(true, war);
+		UtilWar.presentacion(false, war);
 		
-		UtilWar.presentacion("Aliado", war.ejectitosAliados, war.terrain, war.terrain.isAliedCity());
-		UtilWar.presentacion("Enemigo", war.ejectitosEnemigos, war.terrain, war.terrain.isEnemyCity());
-		System.out.println(" ");
-		System.out.println(" ");
+		war.logSimulador.addSalto();
+		war.logSimulador.addSeparador();
+		war.logSimulador.addSalto();
 		
-		if ((numEjercitosEnemigos == 0)) {
-			// Fin
-			System.out.println("         _______     ");
-			System.out.println("        |       |    ");
-			System.out.println("       (|  WIN  |)   ");
-			System.out.println("        |       |   ");
-			System.out.println("         \\     /    ");
-			System.out.println("           ---      ");
-			System.out.println("          _|_|_     ");
-		} else {
-			System.out.println("          .-.     ");
-			System.out.println("        __| |__   ");
-			System.out.println("       [__   __]   ");
-			System.out.println("          | |      ");
-			System.out.println("LOST      | |      ");
-			System.out.println("          | |      ");
-			System.out.println("          '-'      ");
-		}
-		System.out.println(" ");
-		System.out.println(" ");
+		war.logSimulador.addLogVictoriaAliada(war.isVictoriaAliada());
 		
+		war.logSimulador.imprimirLog();
+		
+		war.logSimulador.imprimirLogInfo();
 	}
 	
 	/**
 	 * Ataque de un ejercito contra el resto.
 	 */
-	static public void ataqueDelEjercito(int round, Ejercito ejercito,ArrayList<Ejercito> ejectitos, Terrain aTerrain, boolean cityAtaque, boolean cityDefensa) {
+	static public void ataqueDelEjercito(int round, Ejercito ejercito,ArrayList<Ejercito> ejectitos, War war, boolean cityAtaque, boolean cityDefensa) {
 		
-		int ataque = UtilWar.obtenerAtaqueEjercito(round,ejercito,aTerrain,cityAtaque);
+		int ataque = UtilWar.obtenerAtaqueEjercito(round,ejercito,war.terrain,cityAtaque);
 		// 125% enemy hated
 		int ataqueEnemyHated = (int) (ataque * 1.5);
 		int totalAtaque = 0;
 		if (round>0) {
 			totalAtaque = ataqueEnemyHated;
-			System.out.println(" Army round "+round+": Ejercito ["+ejercito.getName()+"] Attack: ("+ataque+"), 125% enemy hated: ("+ataqueEnemyHated+"), totalAtaque = "+totalAtaque);
+			war.logSimulador.addLogInfo(" Army round "+round+": Ejercito ["+ejercito.getName()+"] Attack: ("+ataque+"), 125% enemy hated: ("+ataqueEnemyHated+"), totalAtaque = "+totalAtaque);
 		} else {
 			// round 0: only first Attack
 			totalAtaque = ataque;
-			System.out.println(" Army round "+round+": Ejercito ["+ejercito.getName()+"] Attack: "+totalAtaque);
+			war.logSimulador.addLogInfo(" Army round "+round+": Ejercito ["+ejercito.getName()+"] Attack: "+totalAtaque);
 		}
 		
 		if (totalAtaque!=0) {
 			// asignamos daño a los ejercitos.
 			int dañoTotalSobrante = totalAtaque;
 			for (int i = 0; i < 3; i++) {
-				dañoTotalSobrante = UtilWar.actualizarDamageEjercitos(round,ejercito,ejectitos, aTerrain, dañoTotalSobrante,cityDefensa);
+				dañoTotalSobrante = UtilWar.actualizarDamageEjercitos(round,ejercito,ejectitos, war, dañoTotalSobrante,cityDefensa);
 				if (dañoTotalSobrante==0) break;
 			}
 		}
